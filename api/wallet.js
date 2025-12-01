@@ -1,7 +1,17 @@
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 const app = express();
 
 app.use(express.json());
+
+// Rate limiting for API endpoints
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please try again later' }
+});
 
 // Create database pool once at module level (lazy initialization for serverless)
 let pool = null;
@@ -30,7 +40,7 @@ app.get('/api/wallet', (req, res) => {
 });
 
 // Wallet registration endpoint (for production use with DB)
-app.post('/api/wallet', async (req, res) => {
+app.post('/api/wallet', apiLimiter, async (req, res) => {
   const { address } = req.body;
   
   if (!address) {
