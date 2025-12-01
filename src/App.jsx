@@ -1,5 +1,5 @@
 import React from 'react';
-import { LaserEyesProvider, useLaserEyes, MAINNET, TESTNET } from '@omnisat/lasereyes-react';
+import { LaserEyesProvider, useLaserEyes, MAINNET } from '@omnisat/lasereyes-react';
 import './App.css';
 
 const WALLET_OPTIONS = [

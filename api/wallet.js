@@ -110,7 +110,12 @@ app.get('/api/wallet/status/:address', async (req, res) => {
 export default app;
 
 // Start server for local development
-const isMainModule = import.meta.url === `file://${process.argv[1]}`;
+import { fileURLToPath } from 'url';
+import path from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const isMainModule = process.argv[1] && path.resolve(process.argv[1]) === __filename;
+
 if (isMainModule) {
   const PORT = process.env.PORT || 3001;
   app.listen(PORT, () => {
