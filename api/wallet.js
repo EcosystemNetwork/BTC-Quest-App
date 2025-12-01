@@ -108,10 +108,12 @@ app.post('/api/wallet/xp', async (req, res) => {
       ssl: { rejectUnauthorized: false }
     });
     
-    const result = await pool.query(
-      'UPDATE users SET xp = xp + $1, quests_completed = quests_completed + 1 WHERE wallet_address = $2 RETURNING *',
-      [xp, address]
-    );
+    // Only increment quests_completed if a questId is provided
+    const query = questId 
+      ? 'UPDATE users SET xp = xp + $1, quests_completed = quests_completed + 1 WHERE wallet_address = $2 RETURNING *'
+      : 'UPDATE users SET xp = xp + $1 WHERE wallet_address = $2 RETURNING *';
+    
+    const result = await pool.query(query, [xp, address]);
     
     return res.json({
       success: true,

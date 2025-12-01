@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useLaserEyes, UNISAT, XVERSE, LEATHER } from '@omnisat/lasereyes-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useLaserEyes } from '@omnisat/lasereyes-react';
 import WalletConnect from './WalletConnect';
 import StatsPanel from './StatsPanel';
 import AchievementBadges from './AchievementBadges';
@@ -25,7 +25,7 @@ function Dashboard() {
   const isActive = connected || demoMode;
 
   // Simulate XP gain for dopamine effect
-  const gainXP = (amount) => {
+  const gainXP = useCallback((amount) => {
     setUserStats(prev => {
       const newXP = prev.xp + amount;
       const levelUp = newXP >= prev.xpToNextLevel;
@@ -43,16 +43,17 @@ function Dashboard() {
       
       return { ...prev, xp: newXP };
     });
-  };
+  }, []);
 
   // Welcome bonus on wallet connect
   useEffect(() => {
     if (connected && address) {
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         gainXP(25);
       }, 500);
+      return () => clearTimeout(timeoutId);
     }
-  }, [connected, address]);
+  }, [connected, address, gainXP]);
 
   return (
     <div className="dashboard">
