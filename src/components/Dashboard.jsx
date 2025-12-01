@@ -63,9 +63,10 @@ function Dashboard() {
     setCanClaim(today !== lastClaim);
   };
 
-  const calculateReward = (currentStreak) => {
-    const streakBonus = Math.min(currentStreak, MAX_STREAK_BONUS);
-    return BASE_REWARD + (streakBonus * 5);
+  const calculateReward = (dayNumber) => {
+    // Reward increases with each day up to MAX_STREAK_BONUS days
+    const dayInCycle = Math.min(dayNumber, MAX_STREAK_BONUS);
+    return BASE_REWARD + (dayInCycle * 5);
   };
 
   const isConsecutiveDay = (lastDate) => {
@@ -182,7 +183,7 @@ function Dashboard() {
             {[1, 2, 3, 4, 5, 6, 7].map((day) => (
               <div 
                 key={day} 
-                className={`day-circle ${day <= (streak % 7 || (streak > 0 ? 7 : 0)) ? 'completed' : ''}`}
+                className={`day-circle ${day <= (streak % 7 === 0 && streak > 0 ? 7 : streak % 7) ? 'completed' : ''}`}
               >
                 <span className="day-number">{day}</span>
                 <span className="day-reward">+{BASE_REWARD + day * 5}</span>
