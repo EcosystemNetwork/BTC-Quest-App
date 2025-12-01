@@ -23,7 +23,9 @@ async function initDB() {
     const { Pool } = require('pg');
     db = new Pool({
       connectionString: process.env.NEON_DB_URL,
-      ssl: { rejectUnauthorized: false },
+      ssl: process.env.NODE_ENV === 'production' 
+        ? { rejectUnauthorized: true }
+        : { rejectUnauthorized: false },
     });
     console.log('Database connected');
   } catch (error) {
@@ -42,12 +44,14 @@ app.post('/api/wallet/connect', async (req, res) => {
     return res.status(400).json({ error: 'Address is required' });
   }
 
+  let dbSaved = false;
   if (db && !SKIP_DB) {
     try {
       await db.query(
         'INSERT INTO wallets (address, provider, connected_at) VALUES ($1, $2, NOW()) ON CONFLICT (address) DO UPDATE SET provider = $2, connected_at = NOW()',
         [address, provider || 'unknown']
       );
+      dbSaved = true;
     } catch (error) {
       console.error('Database error:', error);
     }
@@ -57,12 +61,18 @@ app.post('/api/wallet/connect', async (req, res) => {
     status: 'connected', 
     address,
     provider: provider || 'unknown',
-    message: SKIP_DB ? 'Connected (dev mode - no DB)' : 'Connected and saved to database'
+    dbSaved,
+    message: SKIP_DB ? 'Connected (dev mode - no DB)' : (dbSaved ? 'Connected and saved to database' : 'Connected but database save failed')
   });
 });
 
 app.post('/api/wallet/disconnect', async (req, res) => {
   const { address } = req.body;
+
+  if (!address) {
+    return res.status(400).json({ error: 'Address is required' });
+  }
+
   res.json({ status: 'disconnected', address });
 });
 
