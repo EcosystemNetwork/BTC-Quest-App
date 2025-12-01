@@ -3,6 +3,7 @@
 
 import express from 'express';
 import pg from 'pg';
+import rateLimit from 'express-rate-limit';
 
 // Check if we should skip DB (development mode)
 const skipDB = process.env.SKIP_DB === 'true' || process.env.NODE_ENV === 'development';
@@ -24,6 +25,15 @@ if (!skipDB && process.env.NEON_DB_URL) {
 const app = express();
 app.use(express.json());
 
+// Rate limiting for API endpoints
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please try again later.' }
+});
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ 
@@ -34,7 +44,7 @@ app.get('/api/health', (req, res) => {
 });
 
 // Store wallet connection (for tracking purposes)
-app.post('/api/wallet/connect', async (req, res) => {
+app.post('/api/wallet/connect', apiLimiter, async (req, res) => {
   const { address, publicKey, provider, network } = req.body;
 
   if (!address) {
@@ -79,7 +89,7 @@ app.post('/api/wallet/connect', async (req, res) => {
 });
 
 // Get wallet status
-app.get('/api/wallet/status/:address', async (req, res) => {
+app.get('/api/wallet/status/:address', apiLimiter, async (req, res) => {
   const { address } = req.params;
 
   if (skipDB || !pool) {
