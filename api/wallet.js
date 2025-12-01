@@ -3,6 +3,27 @@ const app = express();
 
 app.use(express.json());
 
+// Create database pool once at module level (lazy initialization for serverless)
+let pool = null;
+function getPool() {
+  if (!pool && process.env.NEON_DB_URL) {
+    const { Pool } = require('pg');
+    pool = new Pool({
+      connectionString: process.env.NEON_DB_URL,
+      ssl: { rejectUnauthorized: false }
+    });
+  }
+  return pool;
+}
+
+// Basic Bitcoin address validation (supports legacy, segwit, and taproot)
+function isValidBitcoinAddress(address) {
+  if (!address || typeof address !== 'string') return false;
+  // Legacy addresses start with 1 or 3, SegWit with bc1, Taproot with bc1p
+  const bitcoinAddressRegex = /^(1|3)[a-km-zA-HJ-NP-Z1-9]{25,34}$|^bc1[a-z0-9]{39,59}$/i;
+  return bitcoinAddressRegex.test(address);
+}
+
 // Health check endpoint
 app.get('/api/wallet', (req, res) => {
   res.json({ status: 'ok', message: 'Wallet API is running' });
@@ -16,6 +37,10 @@ app.post('/api/wallet', async (req, res) => {
     return res.status(400).json({ error: 'Wallet address is required' });
   }
 
+  if (!isValidBitcoinAddress(address)) {
+    return res.status(400).json({ error: 'Invalid Bitcoin address format' });
+  }
+
   // In development mode, skip DB operations
   if (process.env.NODE_ENV === 'development' || process.env.SKIP_DB === 'true') {
     return res.json({ 
@@ -26,14 +51,13 @@ app.post('/api/wallet', async (req, res) => {
   }
 
   // Production mode with Neon DB
-  try {
-    const { Pool } = require('pg');
-    const pool = new Pool({
-      connectionString: process.env.NEON_DB_URL,
-      ssl: { rejectUnauthorized: false }
-    });
+  const dbPool = getPool();
+  if (!dbPool) {
+    return res.status(500).json({ error: 'Database not configured' });
+  }
 
-    await pool.query(
+  try {
+    await dbPool.query(
       'INSERT INTO wallets (address) VALUES ($1) ON CONFLICT (address) DO NOTHING',
       [address]
     );
