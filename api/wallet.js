@@ -18,13 +18,38 @@ function getPool() {
   return pool;
 }
 
+// Simple in-memory rate limiter
+const rateLimit = {
+  requests: new Map(),
+  windowMs: 60000, // 1 minute
+  maxRequests: 10, // max 10 requests per minute per IP
+};
+
+function rateLimiter(req, res, next) {
+  const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress || 'unknown';
+  const now = Date.now();
+  const windowStart = now - rateLimit.windowMs;
+
+  // Clean old entries
+  const userRequests = rateLimit.requests.get(ip) || [];
+  const recentRequests = userRequests.filter(time => time > windowStart);
+
+  if (recentRequests.length >= rateLimit.maxRequests) {
+    return res.status(429).json({ error: 'Too many requests, please try again later' });
+  }
+
+  recentRequests.push(now);
+  rateLimit.requests.set(ip, recentRequests);
+  next();
+}
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
-// Wallet endpoint
-app.post('/api/wallet', async (req, res) => {
+// Wallet endpoint with rate limiting
+app.post('/api/wallet', rateLimiter, async (req, res) => {
   const { address } = req.body;
 
   if (!address) {
