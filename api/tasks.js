@@ -1,15 +1,16 @@
 // API endpoint for task management
 // This can be extended for database integration in production
 
-const express = require('express');
+import express from 'express';
+
 const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(express.json());
 
-// In-memory storage (replace with database in production)
-let tasks = [
+// Task templates (used to generate tasks for each user)
+const taskTemplates = [
   {
     id: 1,
     title: 'Complete Profile Setup',
@@ -17,7 +18,6 @@ let tasks = [
     category: 'onboarding',
     icon: '👤',
     reward: 50,
-    completed: false,
     difficulty: 'easy'
   },
   {
@@ -27,7 +27,6 @@ let tasks = [
     category: 'onboarding',
     icon: '🔗',
     reward: 100,
-    completed: false,
     difficulty: 'easy'
   },
   {
@@ -37,16 +36,30 @@ let tasks = [
     category: 'daily',
     icon: '📅',
     reward: 25,
-    completed: false,
     difficulty: 'easy',
     recurring: true
   }
 ];
 
-let userPoints = {};
+// In-memory storage per user (replace with database in production)
+const userTasks = {};
+const userPoints = {};
+
+// Get tasks for user (initialize if needed)
+function getTasksForUser(userId) {
+  if (!userTasks[userId]) {
+    userTasks[userId] = taskTemplates.map(task => ({
+      ...task,
+      completed: false
+    }));
+  }
+  return userTasks[userId];
+}
 
 // Get all tasks
 app.get('/api/tasks', (req, res) => {
+  const userId = req.query.userId || 'anonymous';
+  const tasks = getTasksForUser(userId);
   res.json({ success: true, tasks });
 });
 
@@ -55,6 +68,7 @@ app.post('/api/tasks/:id/complete', (req, res) => {
   const taskId = parseInt(req.params.id, 10);
   const userId = req.body.userId || 'anonymous';
   
+  const tasks = getTasksForUser(userId);
   const task = tasks.find(t => t.id === taskId);
   
   if (!task) {
@@ -65,7 +79,7 @@ app.post('/api/tasks/:id/complete', (req, res) => {
     return res.status(400).json({ success: false, error: 'Task already completed' });
   }
   
-  // Update task status
+  // Update task status for this user
   task.completed = true;
   
   // Award points
@@ -100,4 +114,4 @@ if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
   });
 }
 
-module.exports = app;
+export default app;

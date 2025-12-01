@@ -181,7 +181,6 @@ function App() {
         message={toast.message}
         type={toast.type}
         points={toast.points}
-        onClose={() => setToast({ message: '', type: '', points: 0 })}
       />
     </div>
   );

@@ -1,6 +1,6 @@
 import React from 'react';
 
-function Toast({ message, type, points, onClose }) {
+function Toast({ message, type, points }) {
   if (!message) return null;
 
   return (
