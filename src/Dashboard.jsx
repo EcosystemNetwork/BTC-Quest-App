@@ -30,7 +30,7 @@ const socialTasks = [
     title: 'Subscribe to Newsletter',
     description: 'Get weekly updates and exclusive rewards',
     reward: 25,
-    link: '#newsletter',
+    link: 'https://btcquest.io/newsletter',
     icon: '📧',
   },
   {
@@ -53,10 +53,12 @@ function Dashboard({ address, onDisconnect }) {
   };
 
   const handleTaskClick = (task) => {
-    // Open the task link
+    // Open the task link in a new tab
     window.open(task.link, '_blank', 'noopener,noreferrer');
 
-    // Mark as completed and add points (simplified - in real app this would need verification)
+    // Note: In production, task completion should be verified via backend API
+    // that checks social platform APIs (Twitter API, Discord bot, etc.)
+    // This simplified version marks tasks as complete after clicking for demo purposes
     if (!completedTasks.includes(task.id)) {
       setCompletedTasks([...completedTasks, task.id]);
       setTotalPoints(totalPoints + task.reward);
