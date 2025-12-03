@@ -18,12 +18,25 @@ body {
 }
 
 .app-header {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 1rem 2rem;
   padding: 2rem;
   text-align: center;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .app-header h1 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #f7931a;
+}
+
+.app-main {
+  flex: 1;
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
   font-size: 2rem;
   font-weight: 700;
   background: linear-gradient(90deg, #f7931a, #ffb347);
