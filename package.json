@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "start": "node api/wallet.js"
+    "start": "node api/wallet.cjs"
   },
   "dependencies": {
     "@omnisat/lasereyes-core": "^0.0.83",

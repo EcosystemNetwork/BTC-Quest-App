@@ -5,19 +5,55 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 3001;
 
-// Skip DB connection in development mode
-const SKIP_DB = process.env.SKIP_DB === 'true' || process.env.NODE_ENV !== 'production';
+// Determine if we should use the database
+// Use DB only in production when NEON_DB_URL is set and SKIP_DB is not true
+const isProduction = process.env.NODE_ENV === 'production';
+const skipDbExplicitly = process.env.SKIP_DB === 'true';
+const USE_DB = isProduction && !skipDbExplicitly && !!process.env.NEON_DB_URL;
 
 let pool = null;
 
-// Only connect to DB in production
-if (!SKIP_DB && process.env.NEON_DB_URL) {
+// Connect to DB only when USE_DB is true
+if (USE_DB) {
   const { Pool } = require('pg');
   pool = new Pool({
     connectionString: process.env.NEON_DB_URL,
     ssl: { rejectUnauthorized: false }
   });
 }
+
+// Simple in-memory rate limiting
+const rateLimitStore = new Map();
+const RATE_LIMIT_WINDOW_MS = 60000; // 1 minute
+const RATE_LIMIT_MAX_REQUESTS = 30; // 30 requests per minute
+
+function rateLimit(req, res, next) {
+  const ip = req.ip || req.connection.remoteAddress || 'unknown';
+  const now = Date.now();
+  
+  if (!rateLimitStore.has(ip)) {
+    rateLimitStore.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW_MS });
+    return next();
+  }
+  
+  const record = rateLimitStore.get(ip);
+  
+  if (now > record.resetTime) {
+    record.count = 1;
+    record.resetTime = now + RATE_LIMIT_WINDOW_MS;
+    return next();
+  }
+  
+  if (record.count >= RATE_LIMIT_MAX_REQUESTS) {
+    return res.status(429).json({ error: 'Too many requests, please try again later' });
+  }
+  
+  record.count++;
+  next();
+}
+
+// Apply rate limiting to all API routes
+app.use('/api', rateLimit);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -48,8 +84,9 @@ app.post('/api/wallet', async (req, res) => {
 
   try {
     // In production, store wallet info in database
+    // Note: Table schema should include: address (PRIMARY KEY), provider, created_at, updated_at
     await pool.query(
-      'INSERT INTO wallets (address, provider, created_at) VALUES ($1, $2, NOW()) ON CONFLICT (address) DO UPDATE SET provider = $2, updated_at = NOW()',
+      'INSERT INTO wallets (address, provider, created_at, updated_at) VALUES ($1, $2, NOW(), NOW()) ON CONFLICT (address) DO UPDATE SET provider = $2, updated_at = NOW()',
       [address, provider]
     );
 
