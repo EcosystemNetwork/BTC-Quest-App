@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useLaserEyes, UNISAT, XVERSE, OYL, LEATHER, MAGIC_EDEN, OKX, PHANTOM, WIZZ } from '@omnisat/lasereyes-react';
 
 const WALLET_OPTIONS = [
@@ -14,16 +14,21 @@ const WALLET_OPTIONS = [
 
 function App() {
   const { connect, disconnect, connected, address, provider } = useLaserEyes();
+  const [error, setError] = useState(null);
 
   const handleConnect = async (walletType) => {
+    setError(null);
     try {
       await connect(walletType);
-    } catch (error) {
-      console.error('Failed to connect wallet:', error);
+    } catch (err) {
+      const errorMessage = err?.message || 'Failed to connect wallet. Please try again.';
+      setError(errorMessage);
+      console.error('Failed to connect wallet:', err);
     }
   };
 
   const handleDisconnect = () => {
+    setError(null);
     disconnect();
   };
 
@@ -52,6 +57,11 @@ function App() {
         ) : (
           <div className="wallet-selection">
             <h2>Select a Wallet</h2>
+            {error && (
+              <div className="error-message">
+                {error}
+              </div>
+            )}
             <div className="wallet-grid">
               {WALLET_OPTIONS.map((wallet) => (
                 <button
