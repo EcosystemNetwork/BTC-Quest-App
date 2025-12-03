@@ -6,7 +6,7 @@
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  background: linear-gradient(135deg, #f7931a 0%, #e8820c 50%, #ff8c00 100%);
   min-height: 100vh;
   color: #ffffff;
 }
@@ -26,16 +26,15 @@ body {
 
 .header h1 {
   font-size: 3rem;
-  background: linear-gradient(90deg, #f7931a, #ffb347);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #ffffff;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
   margin-bottom: 0.5rem;
 }
 
 .subtitle {
-  color: #a0a0a0;
+  color: #ffffff;
   font-size: 1.1rem;
+  opacity: 0.9;
 }
 
 .main-content {
@@ -48,12 +47,12 @@ body {
 }
 
 .wallet-selection {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(0, 0, 0, 0.2);
   border-radius: 16px;
   padding: 2rem;
   width: 100%;
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .wallet-selection h2 {
@@ -80,7 +79,7 @@ body {
 }
 
 .wallet-btn {
-  background: linear-gradient(135deg, #f7931a 0%, #e8820c 100%);
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
   border: none;
   padding: 1rem 1.5rem;
   border-radius: 12px;
@@ -93,7 +92,7 @@ body {
 
 .wallet-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(247, 147, 26, 0.3);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
 }
 
 .wallet-btn:active {
@@ -101,12 +100,12 @@ body {
 }
 
 .connected-container {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(0, 0, 0, 0.2);
   border-radius: 16px;
   padding: 2rem;
   width: 100%;
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   text-align: center;
 }
 
@@ -168,8 +167,9 @@ body {
 .footer {
   margin-top: 3rem;
   text-align: center;
-  color: #666;
+  color: #ffffff;
   font-size: 0.875rem;
+  opacity: 0.8;
 }
 
 @media (max-width: 480px) {
