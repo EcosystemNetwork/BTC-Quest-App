@@ -1,12 +1,13 @@
 {
   "type": "module",
-  "name": "minimal-wallet-connect",
+  "name": "btc-quest-app",
   "version": "1.0.0",
+  "description": "A task rewards application where users complete tasks to earn points and rewards",
   "private": true,
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "start": "node api/wallet.js"
+    "start": "node api/tasks.js"
   },
   "dependencies": {
     "@omnisat/lasereyes-core": "^0.0.83",

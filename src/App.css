@@ -265,4 +265,84 @@ body {
   .wallet-grid {
     grid-template-columns: repeat(2, 1fr);
   }
+.wallet-container {
+  text-align: center;
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  max-width: 400px;
+  width: 90%;
+}
+
+h1 {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+  background: linear-gradient(135deg, #f7931a 0%, #ffb347 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.subtitle {
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 2rem;
+}
+
+.wallet-button {
+  padding: 12px 32px;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.wallet-button.connect {
+  background: linear-gradient(135deg, #f7931a 0%, #ffb347 100%);
+  color: #1a1a2e;
+}
+
+.wallet-button.connect:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(247, 147, 26, 0.4);
+}
+
+.wallet-button.disconnect {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.wallet-button.disconnect:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.connected-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.address-display {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 12px 16px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.label {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.address {
+  font-family: 'Monaco', 'Consolas', monospace;
+  color: #f7931a;
 }
