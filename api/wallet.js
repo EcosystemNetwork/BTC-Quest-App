@@ -7,18 +7,25 @@ const skipDB = process.env.SKIP_DB === 'true' || process.env.NODE_ENV === 'devel
 
 // Initialize database connection only in production with Neon DB
 let pool = null;
-if (!skipDB && process.env.NEON_DB_URL) {
-  try {
-    const pg = await import('pg');
-    const { Pool } = pg.default;
-    pool = new Pool({
-      connectionString: process.env.NEON_DB_URL,
-      ssl: { rejectUnauthorized: false },
-    });
-  } catch (error) {
-    console.error('Failed to initialize database pool:', error);
+
+async function initializePool() {
+  if (!skipDB && process.env.NEON_DB_URL && !pool) {
+    try {
+      const pg = await import('pg');
+      const { Pool } = pg.default;
+      pool = new Pool({
+        connectionString: process.env.NEON_DB_URL,
+        ssl: { rejectUnauthorized: false },
+      });
+    } catch (error) {
+      console.error('Failed to initialize database pool:', error);
+    }
   }
+  return pool;
 }
+
+// Initialize pool on module load (non-blocking)
+initializePool();
 
 // Create express app
 const app = express();
@@ -96,8 +103,11 @@ app.post('/api/wallet/connect', apiLimiter, async (req, res) => {
     return res.status(400).json({ error: 'Invalid Bitcoin address format' });
   }
 
+  // Ensure pool is initialized
+  const dbPool = await initializePool();
+  
   // In development mode, just return success
-  if (skipDB || !pool) {
+  if (skipDB || !dbPool) {
     return res.json({
       success: true,
       message: 'Wallet connected (dev mode - no DB)',
@@ -107,7 +117,7 @@ app.post('/api/wallet/connect', apiLimiter, async (req, res) => {
 
   // In production, store the connection
   try {
-    const result = await pool.query(
+    const result = await dbPool.query(
       `INSERT INTO wallet_connections (address, public_key, provider, network, connected_at)
        VALUES ($1, $2, $3, $4, NOW())
        ON CONFLICT (address) DO UPDATE SET
@@ -143,7 +153,10 @@ app.get('/api/wallet/status/:address', apiLimiter, async (req, res) => {
     return res.status(400).json({ error: 'Invalid Bitcoin address format' });
   }
 
-  if (skipDB || !pool) {
+  // Ensure pool is initialized
+  const dbPool = await initializePool();
+  
+  if (skipDB || !dbPool) {
     return res.json({
       success: true,
       data: null,
@@ -152,7 +165,7 @@ app.get('/api/wallet/status/:address', apiLimiter, async (req, res) => {
   }
 
   try {
-    const result = await pool.query(
+    const result = await dbPool.query(
       'SELECT * FROM wallet_connections WHERE address = $1',
       [address]
     );

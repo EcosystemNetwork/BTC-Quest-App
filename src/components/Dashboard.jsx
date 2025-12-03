@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, memo, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, memo } from 'react';
 import { useLaserEyes } from '@omnisat/lasereyes-react';
 import WalletConnect from './WalletConnect';
 import StatsPanel from './StatsPanel';
@@ -9,10 +9,11 @@ import Leaderboard from './Leaderboard';
 import Confetti from './Confetti';
 import './Dashboard.css';
 
-// Constants for daily rewards
+// Constants
 const STORAGE_KEY = 'btc_quest_user_data';
 const XP_PER_LEVEL = 100;
 const MAX_STREAK_MULTIPLIER = 50; // Max 50% bonus
+const SAVE_DEBOUNCE_MS = 500; // Debounce delay for localStorage saves
 
 // Memoized header component
 const DashboardHeader = memo(function DashboardHeader() {
@@ -149,10 +150,21 @@ function Dashboard() {
     if (userStats.questsCompleted > 0 || userStats.xp > 0) {
       const timeoutId = setTimeout(() => {
         saveUserData(userStats);
-      }, 500);
+      }, SAVE_DEBOUNCE_MS);
       return () => clearTimeout(timeoutId);
     }
   }, [userStats]);
+
+  // Calculate XP required for a given level (cached calculation)
+  const calculateXpForLevel = useCallback((level) => {
+    // Use a simple multiplication instead of Math.pow for better performance
+    // Level 1: 100, Level 2: 150, Level 3: 225, etc.
+    let xp = XP_PER_LEVEL;
+    for (let i = 1; i < level; i++) {
+      xp = Math.floor(xp * 1.5);
+    }
+    return xp;
+  }, []);
 
   // Calculate XP gain with streak bonus
   const gainXP = useCallback((amount) => {
@@ -165,14 +177,18 @@ function Dashboard() {
       let newXP = prev.xp + totalXP;
       let newLevel = prev.level;
       let newXpToNextLevel = prev.xpToNextLevel;
+      let didLevelUp = false;
       
-      // Check for level up
+      // Check for level up (typically only one level at a time)
       while (newXP >= newXpToNextLevel) {
         newXP -= newXpToNextLevel;
         newLevel += 1;
-        newXpToNextLevel = Math.floor(XP_PER_LEVEL * Math.pow(1.5, newLevel - 1));
-        
-        // Show confetti on level up
+        newXpToNextLevel = calculateXpForLevel(newLevel);
+        didLevelUp = true;
+      }
+      
+      // Show confetti on level up (only once per gain)
+      if (didLevelUp) {
         setShowConfetti(true);
         setTimeout(() => setShowConfetti(false), 3000);
       }
@@ -185,7 +201,7 @@ function Dashboard() {
         questsCompleted: prev.questsCompleted + 1
       };
     });
-  }, []);
+  }, [calculateXpForLevel]);
 
   // Handle demo mode toggle
   const handleDemoMode = useCallback((value) => {
